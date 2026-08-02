@@ -1,0 +1,6 @@
+{
+  "name": "Cook Jr.",
+  "description": "Smart AI-powered kitchen companion for custom recipe generation, ingredient-based meal suggestions, gym nutrition and workout schedules, smart timetables, kitchen safety management, and interactive cooking games with a floating voice-enabled AI chef assistant.",
+  "requestFramePermissions": ["microphone"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
