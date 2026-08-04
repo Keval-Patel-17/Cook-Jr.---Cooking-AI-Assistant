@@ -3,6 +3,7 @@ import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
+  loadingSession: boolean;
   logout: () => void;
   setUser: React.Dispatch<React.SetStateAction<User | null>>;
   authModalOpen: boolean;
@@ -19,13 +20,17 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
+  const [loadingSession, setLoadingSession] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [savedModalOpen, setSavedModalOpen] = useState(false);
   const [language, setLanguage] = useState<'en' | 'hi'>('en');
 
   const checkAuthSession = async () => {
     const token = localStorage.getItem('cookjr_token');
-    if (!token) return;
+    if (!token) {
+      setLoadingSession(false);
+      return;
+    }
 
     try {
       const res = await fetch('/api/auth/me', {
@@ -39,6 +44,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (err) {
       console.error('Session check failed:', err);
+    } finally {
+      setLoadingSession(false);
     }
   };
 
@@ -65,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <AuthContext.Provider
       value={{
         user,
+        loadingSession,
         logout,
         setUser,
         authModalOpen,
@@ -87,6 +95,7 @@ export function useAuth() {
   if (!context) {
     return {
       user: null,
+      loadingSession: false,
       logout: () => {},
       setUser: () => {},
       authModalOpen: false,

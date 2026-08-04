@@ -129,6 +129,43 @@ app.get('/api/auth/me', authenticateToken, (req: AuthRequest, res: Response) => 
   res.json({ user: safeUser });
 });
 
+app.post('/api/auth/google', async (req: Request, res: Response) => {
+  try {
+    const { name, email, googleId } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: 'Email is required for Google Sign-In.' });
+    }
+
+    const db = readDB();
+    let user = db.users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+
+    if (!user) {
+      user = {
+        id: 'google-' + (googleId || Date.now()),
+        email: email.toLowerCase(),
+        name: name || email.split('@')[0],
+        passwordHash: 'google-oauth-authenticated',
+        createdAt: new Date().toISOString(),
+        xp: 150,
+        level: 1,
+        coins: 100,
+        streak: 1,
+        lastActiveDate: new Date().toISOString().split('T')[0],
+        badges: ['Junior Chef Starter', 'Google Explorer'],
+      };
+      db.users.push(user);
+      writeDB(db);
+    }
+
+    const token = jwt.sign({ userId: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    const { passwordHash: _, ...safeUser } = user;
+    return res.json({ token, user: safeUser });
+  } catch (err: any) {
+    console.error('Google auth error:', err);
+    return res.status(500).json({ error: 'Google authentication failed.' });
+  }
+});
+
 // ==================== AI GENERATION ROUTES ====================
 
 app.post('/api/ai/recipe-generate', authenticateToken, async (req: Request, res: Response) => {
